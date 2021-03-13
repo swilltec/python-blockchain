@@ -38,16 +38,35 @@ def print_blockchain_element():
         print("Displaying Block")
         print(blockchain)
 
+
 def edit_first_transaction(value):
-    blockchain[0] = [value]
+    if len(blockchain) >= 1:
+        blockchain[0] = [value]
+
+
+def verify_chain():
+    block_index = 0
+
+    is_valid = True
+    for block in blockchain:
+        if block_index == 0:
+            block_index += 1
+            continue
+        elif block[0] == blockchain[block_index - 1]:
+            is_valid = True
+        else:
+            is_valid = False
+            break
+        block_index += 1
+    return is_valid
 
 
 while True:
     print("Please Choose")
     print("1: Add a new trasaction value")
     print("2: Output the blockchain blocks")
+    print("h: alter blockchain transaction")
     print("q: Quit")
-    print("h: Edit last transaction")
     user_choice = get_user_choice()
     if user_choice == "1":
         tx_amount = get_transaction_value()
@@ -60,4 +79,6 @@ while True:
         edit_first_transaction([123])
     else:
         print("Invalid input. Please select a value fro the list")
-    print("Choiced registered")
+    if not verify_chain():
+        print("Invalid blockchain")
+        break
