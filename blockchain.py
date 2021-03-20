@@ -1,6 +1,7 @@
 import functools
 from collections import OrderedDict
 import json
+import pickle
 
 from hash_util import hash_string_256, hash_block
 
@@ -30,28 +31,29 @@ def get_balance(participant):
 
     tx_recipient = [[tx['amount'] for tx in block['transaction']
                      if tx['recipient'] == participant] for block in blockchain]
-    amount_recieved = functools.reduce(lambda tx_sum, tx_amt: tx_sum + sum(
-        tx_amt) if len(tx_amt) else tx_sum + 0 > 0, tx_recipient, 0)
-
-    # print(tx_sender)
+    tx_recipient_amount= [amount[0] for amount in tx_recipient if len(amount) > 0]
+    amount_recieved = functools.reduce(lambda a, b: a + b, tx_recipient_amount, 0)
 
     return amount_recieved - amount_sent
 
 
 def load_data():
-    with open("blockchain.txt", mode="r") as f:
-        file_content = f.readlines()
+    with open("blockchain.p", mode="rb") as f:
+        file_content = pickle.loads(f.read())
         global blockchain
         global open_transactions
-        blockchain = json.loads(file_content[0])[:-1]
-        open_transactions = json.loads(file_content[1])
+        blockchain = file_content['chain']
+        open_transactions = file_content['ot']
 
 
 def save_data():
-    with open("blockchain.txt", mode="w") as f:
-        f.write(json.dumps(blockchain))
-        f.write('\n')
-        f.write(json.dumps(open_transactions))
+    with open("blockchain.p", mode="wb") as f:
+        save_data = {
+            'chain': blockchain,
+            'ot': open_transactions,
+        }
+        f.write(pickle.dumps(save_data))
+
 
 
 load_data()
