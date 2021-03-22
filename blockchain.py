@@ -33,7 +33,7 @@ def get_balance(participant):
 
 def load_data():
     try:
-        with open("blockchain.p", mode="rb") as f:
+        with open("blockchain/blockchain.p", mode="rb") as f:
             file_content = pickle.loads(f.read())
             global blockchain
             global open_transactions
