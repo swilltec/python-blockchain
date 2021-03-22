@@ -1,11 +1,10 @@
 import functools
-from collections import OrderedDict
 import json
 import pickle
 
 from hash_util import hash_string_256, hash_block
 from block import Block
-
+from transaction import Transaction
 
 owner = "Swill"
 participants = {'Swill'}
@@ -13,17 +12,17 @@ MINING_REWARD = 10
 blockchain = []
 
 def get_balance(participant):
-    tx_sender = [[tx['amount'] for tx in block.transactions
-                  if tx['sender'] == participant] for block in blockchain]
+    tx_sender = [[tx.amount for tx in block.transactions
+                  if tx.sender == participant] for block in blockchain]
 
-    open_tx_sender = [tx["amount"]
-                      for tx in open_transactions if tx["sender"] == participant]
+    open_tx_sender = [tx.amount
+                      for tx in open_transactions if tx.sender == participant]
     tx_sender.append(open_tx_sender)
     tx_sender_amount = [amount[0] for amount in tx_sender if len(amount) > 0]
     amount_sent = functools.reduce(lambda a, b: a + b, tx_sender_amount, 0)
 
-    tx_recipient = [[tx['amount'] for tx in block.transactions
-                     if tx['recipient'] == participant] for block in blockchain]
+    tx_recipient = [[tx.amount for tx in block.transactions
+                     if tx.recipient == participant] for block in blockchain]
     tx_recipient_amount = [amount[0]
                            for amount in tx_recipient if len(amount) > 0]
     amount_recieved = functools.reduce(
@@ -62,8 +61,8 @@ def save_data():
 load_data()
 
 
-def valid_proof(transaction, last_hash, proof):
-    guess = (str(transaction) + str(last_hash) + str(proof)).encode()
+def valid_proof(transactions, last_hash, proof):
+    guess = (str([tx.to_ordered_dict() for tx in transactions]) + str(last_hash) + str(proof)).encode()
     guess_hash = hash_string_256(guess)
     return guess_hash[0:2] == '11'
 
@@ -78,8 +77,8 @@ def proof_of_work():
 
 
 def verify_transaction(transaction):
-    sender_balance = get_balance(transaction['sender'])
-    return sender_balance >= transaction["amount"]
+    sender_balance = get_balance(transaction.sender)
+    return sender_balance >= transaction.amount
 
 
 def get_last_blockchain_value():
@@ -101,13 +100,9 @@ def add_transaction(recipient, sender=owner, amount=1.0):
         :sender: The sender of the coins.
         :recipient: The recipient of the coins.
         :last_transaction: The amount of coins sent with the transaction (defaults [1])"""
-
-    transaction = OrderedDict(
-        [("sender", sender), ("recipient", recipient), ("amount", amount)])
+    transaction = Transaction(sender, recipient, amount)
     if verify_transaction(transaction):
         open_transactions.append(transaction)
-        participants.add(sender)
-        participants.add(recipient)
         save_data()
         return True
     return False
@@ -122,8 +117,7 @@ def mine_block():
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
     proof = proof_of_work()
-    reward_transaction = OrderedDict(
-        [("sender", "Mining"), ("recipient", owner), ("amount", MINING_REWARD)])
+    reward_transaction = Transaction('Mining', owner, MINING_REWARD)
     copied_transaction = open_transactions[:]
     open_transactions.append(reward_transaction)
     block = Block(len(blockchain), hashed_block, open_transactions, proof)
