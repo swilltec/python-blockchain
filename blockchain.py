@@ -12,11 +12,12 @@ MINING_REWARD = 10
 
 
 class BlockChain:
-    def __init__(self):
+    def __init__(self, hosting_node_id):
         # Initializing our (empty) blockchain list
         genesis_block = Block(0, "", [], 1000, 0)
         self.chain = [genesis_block]
         self.open_transactions = []
+        self.hosting_node = hosting_node_id
         self.load_data()
 
     def load_data(self):
@@ -40,7 +41,8 @@ class BlockChain:
         except IOError:
             print('Saving failed')
 
-    def get_balance(self, participant):
+    def get_balance(self):
+        participant = self.hosting_node
         tx_sender = [[tx.amount for tx in block.transactions
                       if tx.sender == participant] for block in self.chain]
 
@@ -92,13 +94,15 @@ class BlockChain:
             return True
         return False
 
-    def mine_block(self, node):
+    def mine_block(self):
         last_block = self.chain[-1]
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
-        reward_transaction = Transaction('Mining', node, MINING_REWARD)
+        reward_transaction = Transaction('Mining', self.hosting_node, MINING_REWARD)
         copied_transaction = self.open_transactions[:]
-        self.copied_transactions.append(reward_transaction)
-        block = Block(len(blockchain), hashed_block, open_transactions, proof)
+        copied_transaction.append(reward_transaction)
+        block = Block(len(self.chain), hashed_block, copied_transaction, proof)
         self.chain.append(block)
+        self.open_transactions = []
+        self.save_data()
         return True
