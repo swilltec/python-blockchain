@@ -51,8 +51,7 @@ class Node:
                 self.print_blockchain_element()
 
             elif user_choice == "4":
-                verifier = Verification()
-                if verifier.verify_transactions(self.blockchain.open_transactions, self.blockchain.get_balance):
+                if Verification.verify_transactions(self.blockchain.open_transactions, self.blockchain.get_balance):
                     print("All transactions are valid")
                 else:
                     print("There are invalid transactions")
@@ -61,8 +60,7 @@ class Node:
 
             else:
                 print("Invalid input. Please select a value from the list")
-            verifier = Verification()
-            if not verifier.verify_chain(self.blockchain.chain):
+            if not Verification.verify_chain(self.blockchain.chain):
                 print("Invalid blockchain")
                 break
             print(f'Balance of {self.id}: {self.blockchain.get_balance():6.2f}')
