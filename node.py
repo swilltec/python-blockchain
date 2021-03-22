@@ -18,7 +18,7 @@ class Node:
 
     def print_blockchain_element(self):
         """Out the blockchain list in the terminal"""
-        for block in self.blockchain.chain:
+        for block in self.blockchain.get_chain():
             print("Displaying Block")
             print(block)
 
@@ -43,7 +43,7 @@ class Node:
                     print('Added Transaction')
                 else:
                     print('Transaction Failed')
-                print(self.blockchain.open_transactions)
+                print(self.blockchain.get_open_transactions())
             elif user_choice == "2":
                 self.blockchain.mine_block()
                 
@@ -51,7 +51,7 @@ class Node:
                 self.print_blockchain_element()
 
             elif user_choice == "4":
-                if Verification.verify_transactions(self.blockchain.open_transactions, self.blockchain.get_balance):
+                if Verification.verify_transactions(self.blockchain.get_open_transactions(), self.blockchain.get_balance):
                     print("All transactions are valid")
                 else:
                     print("There are invalid transactions")
@@ -60,7 +60,7 @@ class Node:
 
             else:
                 print("Invalid input. Please select a value from the list")
-            if not Verification.verify_chain(self.blockchain.chain):
+            if not Verification.verify_chain(self.blockchain.get_chain()):
                 print("Invalid blockchain")
                 break
             print(f'Balance of {self.id}: {self.blockchain.get_balance():6.2f}')

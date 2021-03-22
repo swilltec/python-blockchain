@@ -15,17 +15,23 @@ class BlockChain:
     def __init__(self, hosting_node_id):
         # Initializing our (empty) blockchain list
         genesis_block = Block(0, "", [], 1000, 0)
-        self.chain = [genesis_block]
-        self.open_transactions = []
+        self.__chain = [genesis_block]
+        self.__open_transactions = []
         self.hosting_node = hosting_node_id
         self.load_data()
+
+    def get_chain(self):
+        return self.__chain[:]
+    
+    def get_open_transactions(self):
+        return self.__open_transactions[:]
 
     def load_data(self):
         try:
             with open("blockchain.p", mode="rb") as f:
                 file_content = pickle.loads(f.read())
-                self.chain = file_content['chain']
-                self.open_transactions = file_content['ot']
+                self.__chain = file_content['chain']
+                self.__open_transactions = file_content['ot']
 
         except IOError:
             print("Handled exceptions")
@@ -34,8 +40,8 @@ class BlockChain:
         try:
             with open("blockchain.p", mode="wb") as f:
                 save_data = {
-                    'chain': self.chain,
-                    'ot': self.open_transactions,
+                    'chain': self.__chain,
+                    'ot': self.__open_transactions,
                 }
                 f.write(pickle.dumps(save_data))
         except IOError:
@@ -44,10 +50,10 @@ class BlockChain:
     def get_balance(self):
         participant = self.hosting_node
         tx_sender = [[tx.amount for tx in block.transactions
-                      if tx.sender == participant] for block in self.chain]
+                      if tx.sender == participant] for block in self.__chain]
 
         open_tx_sender = [tx.amount
-                          for tx in self.open_transactions if tx.sender == participant]
+                          for tx in self.__open_transactions if tx.sender == participant]
         tx_sender.append(open_tx_sender)
 
         tx_sender_amount = [amount[0]
@@ -55,7 +61,7 @@ class BlockChain:
         amount_sent = functools.reduce(lambda a, b: a + b, tx_sender_amount, 0)
 
         tx_recipient = [[tx.amount for tx in block.transactions
-                        if tx.recipient == participant] for block in self.chain]
+                        if tx.recipient == participant] for block in self.__chain]
         tx_recipient_amount = [amount[0]
                                for amount in tx_recipient if len(amount) > 0]
         amount_recieved = functools.reduce(
@@ -64,18 +70,18 @@ class BlockChain:
         return amount_recieved - amount_sent
 
     def proof_of_work(self):
-        last_block = self.chain[-1]
+        last_block = self.__chain[-1]
         last_hash = hash_block(last_block)
         proof = 0
-        while not Verification.valid_proof(self.open_transactions, last_hash, proof):
+        while not Verification.valid_proof(self.__open_transactions, last_hash, proof):
             proof += 1
         return proof
 
     def get_last_blockchain_value(self):
         """ Returns the last value of the current blockchain"""
-        if len(self.chain) < 1:
+        if len(self.__chain) < 1:
             return None
-        return self.chain[-1]
+        return self.__chain[-1]
 
     def add_transaction(self, recipient, sender, amount=1.0):
         """Append a new value as wekk as the last blockchain
@@ -87,20 +93,20 @@ class BlockChain:
             :last_transaction: The amount of coins sent with the transaction (defaults [1])"""
         transaction = Transaction(sender, recipient, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
-            self.open_transactions.append(transaction)
+            self.__open_transactions.append(transaction)
             self.save_data()
             return True
         return False
 
     def mine_block(self):
-        last_block = self.chain[-1]
+        last_block = self.__chain[-1]
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
         reward_transaction = Transaction('Mining', self.hosting_node, MINING_REWARD)
-        copied_transaction = self.open_transactions[:]
+        copied_transaction = self.__open_transactions[:]
         copied_transaction.append(reward_transaction)
-        block = Block(len(self.chain), hashed_block, copied_transaction, proof)
-        self.chain.append(block)
-        self.open_transactions = []
+        block = Block(len(self.__chain), hashed_block, copied_transaction, proof)
+        self.__chain.append(block)
+        self.__open_transactions = []
         self.save_data()
         return True
