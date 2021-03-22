@@ -7,7 +7,6 @@ from block import Block
 from transaction import Transaction
 
 owner = "Swill"
-participants = {'Swill'}
 MINING_REWARD = 10
 blockchain = []
 
@@ -33,7 +32,7 @@ def get_balance(participant):
 
 def load_data():
     try:
-        with open("blockchain/blockchain.p", mode="rb") as f:
+        with open("blockchain.p", mode="rb") as f:
             file_content = pickle.loads(f.read())
             global blockchain
             global open_transactions
@@ -160,8 +159,7 @@ while waiting_for_input:
     print("1: Add a new trasaction value")
     print("2: Mine a new block ")
     print("3: Output the blockchain blocks")
-    print("4: Output participants")
-    print("5: Check transaction validity")
+    print("4: Check transaction validity")
     print("q: Quit")
     user_choice = get_user_choice()
     if user_choice == "1":
@@ -180,9 +178,8 @@ while waiting_for_input:
                 'Swill', get_balance('Swill')))
     elif user_choice == "3":
         print_blockchain_element()
+   
     elif user_choice == "4":
-        print(participants)
-    elif user_choice == "5":
         if verify_transactions():
             print("All transactions are valid")
         else:
