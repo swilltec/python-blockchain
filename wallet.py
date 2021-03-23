@@ -1,4 +1,6 @@
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
 import Crypto.Random
 import binascii
 
@@ -26,7 +28,7 @@ class Wallet:
         try:
             with open('wallet.txt', mode='r') as f:
                 keys = f.readlines()
-                public_key = keys[0][:-1]
+                public_key = keys[0].strip()
                 private_key = keys[1]
                 self.public_key = public_key
                 self.private_key = private_key
@@ -38,3 +40,20 @@ class Wallet:
         private_key = RSA.generate(1024, Crypto.Random.new().read)
         public_key = private_key.publickey()
         return (binascii.hexlify(private_key.exportKey(format='DER')).decode('ascii'), binascii.hexlify(public_key.exportKey(format='DER')).decode('ascii'))
+
+    def sign_transactions(self, sender, recipient, amount):
+        signer = PKCS1_v1_5.new(RSA.importKey(binascii.unhexlify(self.private_key)))
+        payload_hash = SHA256.new((str(sender) + str(recipient) + str(amount)).encode('utf8'))
+        signature = signer.sign(payload_hash)
+        return binascii.hexlify(signature).decode('ascii')
+
+    @staticmethod
+    def verify_transaction(transaction):
+        if transaction.sender == 'Mining':
+            return True
+        public_key = RSA.importKey(binascii.unhexlify(transaction.sender.strip()))
+        verifier = PKCS1_v1_5.new(public_key)
+        payload_hash = SHA256.new((str(transaction.sender) + str(transaction.recipient) + str(transaction.amount)).encode('utf8'))
+        return verifier.verify(payload_hash, binascii.unhexlify(transaction.signature))
+
+
