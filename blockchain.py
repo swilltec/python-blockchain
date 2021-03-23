@@ -83,7 +83,7 @@ class BlockChain:
             return None
         return self.__chain[-1]
 
-    def add_transaction(self, recipient, sender, amount=1.0):
+    def add_transaction(self, recipient, sender, amount):
         """Append a new value as wekk as the last blockchain
         value to the blockchain
 
@@ -91,6 +91,9 @@ class BlockChain:
             :sender: The sender of the coins.
             :recipient: The recipient of the coins.
             :last_transaction: The amount of coins sent with the transaction (defaults [1])"""
+
+        if self.hosting_node == None:
+            return False
         transaction = Transaction(sender, recipient, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
@@ -99,6 +102,8 @@ class BlockChain:
         return False
 
     def mine_block(self):
+        if self.hosting_node == None:
+            return False
         last_block = self.__chain[-1]
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
