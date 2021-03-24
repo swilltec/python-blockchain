@@ -21,8 +21,10 @@ class Wallet:
                 f.write(self.public_key)
                 f.write('\n')
                 f.write(self.private_key)
+            return True
         except (IOError, IndexError):
             print("Saving wallet failed")
+            return False
 
     def load_keys(self):
         try:

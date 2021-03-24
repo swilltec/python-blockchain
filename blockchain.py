@@ -94,7 +94,7 @@ class BlockChain:
             :last_transaction: The amount of coins sent with the transaction (defaults [1])"""
 
         if self.hosting_node == None:
-            return False
+            return None
         transaction = Transaction(sender, recipient, amount, signature)
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
@@ -104,7 +104,7 @@ class BlockChain:
 
     def mine_block(self):
         if self.hosting_node == None:
-            return False
+            return None
         last_block = self.__chain[-1]
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
@@ -118,4 +118,4 @@ class BlockChain:
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
-        return True
+        return block
