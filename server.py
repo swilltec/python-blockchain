@@ -17,6 +17,8 @@ def create_keys():
             'public_key': wallet.public_key,
             'private_key': wallet.private_key
         }
+        global blockchain
+        blockchain = BlockChain(wallet.public_key)
         return jsonify(response), 201
     else:
         response = {
@@ -24,9 +26,25 @@ def create_keys():
             }
         return jsonify(response), 500
 
+@app.route('/wallet', methods=['GET'])
 def load_keys():
-    pass
+    if wallet.load_keys():
+        response = {
+            'public_key': wallet.public_key,
+            'private_key': wallet.private_key
+        }
+        global blockchain
+        blockchain = BlockChain(wallet.public_key)
+        return jsonify(response), 200
+    else:
+        response = {
+            'message': 'Loading the keys failed.'
+        }
+        return jsonify(response), 500
 
+
+
+ 
 @app.route('/', methods=['GET'])
 def get_ui():
     return 'This works'
@@ -39,7 +57,7 @@ def mine():
         dict_block['transactions'] = [tx.__dict__ for tx in dict_block['transactions']]
         response = {
             'message': 'Block was added successfully',
-            'block': block_block
+            'block': dict_block
         }
         return (jsonify(dict_block), 201)
     else:
